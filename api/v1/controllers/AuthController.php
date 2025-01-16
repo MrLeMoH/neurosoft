@@ -1,40 +1,39 @@
 <?php
-namespace Controllers;
+// /controllers/AuthController.php
 
-use Models\User;
+namespace v1\controllers;
 
-class AuthController {
-    private $userModel;
+use v1\models\User;
 
-    public function __construct() {
-        $this->userModel = new User();
-    }
-
-    public function authenticate() {
-        $data = json_decode(file_get_contents('php://input'), true);
-        $user = $this->userModel->authenticate($data['login'], $data['password']);
-        if ($user) {
-            session_start();
-            $_SESSION['user_id'] = $user['id'];
-            echo json_encode(['message' => 'Authenticated successfully']);
-        } else {
-            echo json_encode(['error' => 'Invalid login or password']);
+class AuthController
+{
+    public function authenticate($data)
+    {
+        $user = new User();
+        if ($user->authenticate($data)) {
+            return ['message' => 'User authenticated successfully'];
         }
+        return ['error' => 'Invalid credentials'];
     }
 
-    public function logout() {
+    public function logout()
+    {
+        // Очистка сессии или токенов
         session_start();
         session_destroy();
-        echo json_encode(['message' => 'Logged out successfully']);
+        return ['message' => 'User logged out successfully'];
     }
 
-    public function getCurrentUser() {
+    public function getCurrentUser()
+    {
         session_start();
         if (isset($_SESSION['user_id'])) {
-            $user = $this->userModel->getById($_SESSION['user_id']);
-            echo json_encode(['user' => $user]);
-        } else {
-            echo json_encode(['error' => 'No user logged in']);
+            $user = new User();
+            $userData = $user->getUserById($_SESSION['user_id']);
+            return ['username' => $userData['username']];
         }
+        return ['error' => 'User not authenticated'];
     }
 }
+
+

@@ -14,21 +14,63 @@ $uri = explode('/', trim($_SERVER['REDIRECT_URL'], '/')); // Разделяем 
 if (isset($uri[1])) {
     switch ($uri[3]) {
         case 'categories':
-            var_dump("categories");
-//            $categoryController = new Controllers\CategoryController();
-//            if ($method === 'POST' && count($uri) === 3) {
-//                $categoryController->createCategory();
-//            } elseif ($method === 'GET' && count($uri) === 3) {
-//                $categoryController->getCategoryById($uri[2]);
-//            } elseif ($method === 'GET' && count($uri) === 2) {
-//                $categoryController->getAllCategories();
-//            } elseif ($method === 'PATCH' && count($uri) === 3) {
-//                $categoryController->updateCategory($uri[2]);
-//            } elseif ($method === 'DELETE' && count($uri) === 3) {
-//                $categoryController->deleteCategory($uri[2]);
-//            }
-            break;
+            $categoryController = new v1\controllers\CategoryController();
 
+            if ($method === 'POST') {
+                $body = json_decode(file_get_contents('php://input'), true);
+                if (empty($body['name'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing required field: name']);
+                    exit;
+                }
+
+                if ($categoryController->createCategory($body)) {
+                    echo json_encode(['message' => 'Category created successfully']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Error creating category']);
+                }
+            } elseif ($method === 'GET') {
+                if (!empty($uri[4])) {
+                    echo json_encode($categoryController->getCategoryById($uri[4]));
+                } else {
+                    echo json_encode($categoryController->getAllCategories());
+                }
+            } elseif ($method === 'PATCH') {
+                if (empty($uri[4])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing required fields: id is empty']);
+                    exit;
+                }
+                $body = json_decode(file_get_contents('php://input'), true);
+                if (empty($body['name'])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing required field: name']);
+                    exit;
+                }
+
+                if ($categoryController->updateCategory($uri[4], $body)) {
+                    echo json_encode(['message' => 'Category updated successfully']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Error updating category']);
+                }
+            } elseif ($method === 'DELETE') {
+                if (empty($uri[4])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing required fields: id is empty']);
+                    exit;
+                }
+
+                if ($categoryController->deleteCategory($uri[4])) {
+                    http_response_code(200);
+                    echo json_encode(['message' => 'Category deleted successfully']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Error deleting category']);
+                }
+            }
+            break;
         case 'products':
             $productController = new v1\controllers\ProductController();
             if ($method === "POST") {
@@ -51,41 +93,86 @@ if (isset($uri[1])) {
                 }
                 exit;
             } elseif ($method === "GET") {
-                $category = $_GET['category'];
-                if (empty($_GET['category']))
+                if (!empty($uri[4]))
                 {
-                    $category = null;
+                    echo json_encode($productController->getProductById($uri[4]));
+                    exit();
                 }
-                echo $productController->getProductsByCategory($category);
-            }
-//            $productController = new v1\controllers\ProductController();
-//            if ($method === 'POST' && count($uri) === 3) {
-//                $productController->createProduct();
-//            } elseif ($method === 'GET' && count($uri) === 3) {
-//                $productController->getProductById($uri[2]);
-//            } elseif ($method === 'GET' && count($uri) === 2) {
-//                if (isset($_GET['category'])) {
-//                    $productController->getProductsByCategory($_GET['category']);
-//                } else {
-//                    $productController->getAllProducts();
-//                }
-//            } elseif ($method === 'PATCH' && count($uri) === 3) {
-//                $productController->updateProduct($uri[2]);
-//            } elseif ($method === 'DELETE' && count($uri) === 3) {
-//                $productController->deleteProduct($uri[2]);
-//            }
-            break;
 
+                $category = null;
+                if (!empty($_GET['category']))
+                {
+                    $category = $_GET['category'];
+                }
+                echo json_encode($productController->getProductsByCategory($category));
+            }
+            elseif ($method === "PATCH")
+            {
+                if (empty($uri[4]))
+                {
+                    // Ответ с кодом ошибки 400 (Bad Request) и сообщением
+                    http_response_code(400);  // Код ответа 400 — неверный запрос
+                    echo json_encode(['error' => 'Missing required fields: id is empty']);
+                    exit;  // Останавливаем выполнение скрипта
+                }
+                // Чтение тела запроса
+                $body = json_decode(file_get_contents('php://input'), true);
+
+                if (empty($body["name"]) && empty($body["categoryId"]) && empty($body["status"]) ) {
+                    // Ответ с кодом ошибки 400 (Bad Request) и сообщением
+                    http_response_code(400);  // Код ответа 400 — неверный запрос
+                    echo json_encode(['error' => 'Missing required fields: name and categoryId and status is empty']);
+                    exit;  // Останавливаем выполнение скрипта
+                }
+
+                if ($productController->updateProduct($uri[4], $body)) {
+                    echo json_encode(['message' => 'Product updated successfully']);
+                }
+                else
+                {
+                    echo json_encode(['error' => 'Error updating product']);
+                }
+            }
+            elseif ($method === "DELETE")
+            {
+                if (empty($uri[4])) {
+                    http_response_code(400);
+                    echo json_encode(['error' => 'Missing required fields: id is empty']);
+                    exit;
+                }
+
+                $id = $uri[4];
+                if ($productController->deleteProduct($id)) {
+                    http_response_code(200);
+                    echo json_encode(['message' => 'Product deleted successfully']);
+                } else {
+                    http_response_code(500);
+                    echo json_encode(['error' => 'Error deleting product']);
+                }
+            }
+            break;
         case 'auth':
-            var_dump("auth");
-//            $authController = new Controllers\AuthController();
-//            if ($method === 'POST') {
-//                $authController->authenticate();
-//            } elseif ($method === 'DELETE') {
-//                $authController->logout();
-//            } elseif ($method === 'GET') {
-//                $authController->getCurrentUser();
-//            }
+            $authController = new v1\controllers\AuthController();
+
+            if ($method === 'POST') {
+                // Аутентификация пользователя
+                if (empty($uri[2])) {
+                    $body = json_decode(file_get_contents('php://input'), true);
+                    if (empty($body['username']) || empty($body['password'])) {
+                        http_response_code(400);
+                        echo json_encode(['error' => 'Missing required fields: username or password']);
+                        exit;
+                    }
+
+                    echo json_encode($authController->authenticate($body));
+                }
+            } elseif ($method === 'DELETE') {
+                // Выход из учетной записи (сброс аутентификации)
+                echo json_encode($authController->logout());
+            } elseif ($method === 'GET') {
+                // Получение данных текущего авторизованного пользователя
+                echo json_encode($authController->getCurrentUser());
+            }
             break;
 
         default:

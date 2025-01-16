@@ -9,20 +9,6 @@ class Product {
     public function __construct() {
         $this->db = Database::getConnection();
     }
-
-    public function getProducts($isAuthorized) {
-        $query = "
-            SELECT p.id, p.name, c.name AS category_name
-            FROM products p
-            JOIN categories c ON p.category_id = c.id
-        ";
-        if (!$isAuthorized) {
-            $query .= " WHERE p.status = 1 AND c.status = 1";
-        }
-        $stmt = $this->db->query($query);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
     public function create($body)
     {
         // Получаем данные из тела запроса
@@ -55,7 +41,58 @@ class Product {
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getAll()
+
+    public function getById($id)
     {
+        $query = "SELECT * FROM products WHERE status = 1  AND id = " . $id;
+        $stmt = $this->db->query($query);
+
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function update($id, $data)
+    {
+        $query = "UPDATE products SET ";
+        $fields = [];
+        $values = [];
+
+        foreach ($data as $key => $value) {
+            $fields[] = "$key = ?";
+            $values[] = $value;
+        }
+
+        $query .= implode(", ", $fields);
+        $query .= " WHERE id = ?";
+
+        // Добавляем id в параметры запроса
+        $values[] = $id;
+
+        // Подготавливаем и выполняем запрос
+        $stmt = $this->db->prepare($query);
+
+        if ($stmt->execute($values)) {
+            return true; // Успех
+        } else {
+            return false; // Ошибка
+        }
+    }
+
+    public function delete($id)
+    {
+        $id = intval($id);
+        $query = "DELETE FROM products WHERE id = ?";
+        $stmt = $this->db->prepare($query);
+
+        if ($stmt->execute([$id])) {
+            echo "Delete successful"; // Отладочное сообщение
+            return true;
+        } else {
+            var_dump($stmt->errorInfo()); // Показывает информацию об ошибке PDO
+            return false;
+        }
+    }
+
+
+
+
 }
