@@ -71,7 +71,7 @@ class User
     }
 
     // Метод для проверки, авторизован ли пользователь
-    public function isAuth()
+    public function isAuth(): bool
     {
         // Запускаем сессию
         session_start();
