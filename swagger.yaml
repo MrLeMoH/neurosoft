@@ -1,0 +1,338 @@
+openapi: 3.0.0
+info:
+  title: E-commerce API
+  description: API для управления категориями, продуктами и аутентификацией.
+  version: 1.0.0
+servers:
+  - url: http://localhost/api/v1
+    description: Локальный сервер
+
+paths:
+  /categories:
+    get:
+      summary: Получить список всех категорий
+      description: |
+          - Возвращает только опубликованные категории для неавторизованных пользователей.
+          - Авторизованные пользователи видят все категории.
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '500':
+          description: Ошибка сервера
+    post:
+      summary: Создать новую категорию
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: Категория успешно создана
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category created successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+
+  /categories/{id}:
+    get:
+      summary: Получить категорию по ID
+      description: |
+        - Возвращает только опубликованные категории для неавторизованных пользователей.
+        - Авторизованные пользователи видят все категории.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          description: Категория не найдена
+        '500':
+          description: Ошибка сервера
+    patch:
+      summary: Обновить категорию
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryInput'
+      responses:
+        '200':
+          description: Категория успешно обновлена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category updated successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+    delete:
+      summary: Удалить категорию
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Категория успешно удалена
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Category deleted successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+
+  /products:
+    get:
+      summary: Получить список всех продуктов
+      description: |
+        - Возвращает только опубликованные продукты для неавторизованных пользователей.
+        - Авторизованные пользователи видят все продукты.
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Фильтрация по категории
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          description: Ошибка сервера
+    post:
+      summary: Создать новый продукт
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Продукт успешно создан
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product created successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+
+  /products/{id}:
+    get:
+      summary: Получить продукт по ID
+      description: |
+        - Возвращает только опубликованные продукты для неавторизованных пользователей.
+        - Авторизованные пользователи видят все продукты.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Продукт не найден
+        '500':
+          description: Ошибка сервера
+    patch:
+      summary: Обновить продукт
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Продукт успешно обновлён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product updated successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+    delete:
+      summary: Удалить продукт
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Продукт успешно удалён
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product deleted successfully
+        '400':
+          description: Некорректный запрос
+        '500':
+          description: Ошибка сервера
+
+  /auth:
+    post:
+      summary: Авторизация пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthInput'
+      responses:
+        '200':
+          description: Успешная авторизация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Некорректный запрос
+    delete:
+      summary: Выход из учетной записи
+      responses:
+        '200':
+          description: Успешный выход
+    get:
+      summary: Получить информацию о текущем пользователе
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+    CategoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        categoryId:
+          type: integer
+        status:
+          type: string
+    ProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        categoryId:
+          type: integer
+        status:
+          type: string
+    AuthInput:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
